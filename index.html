@@ -2,18 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Mat Bulao Run</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#3b1f4a;--pink:#ff6fa5;--yellow:#ffd23f;--mint:#5fe0b7;--sky:#7fd4ff;--paper:#fff6e5}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{margin:0;height:100%;background:var(--ink);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;color:var(--ink);overflow:hidden;touch-action:manipulation}
-#wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-#stage{position:relative;width:min(100vw,calc(100vh*16/9));aspect-ratio:16/9;max-height:100vh;box-shadow:0 0 0 4px var(--yellow),0 20px 60px #0008;border-radius:18px;overflow:hidden;background:var(--sky)}
-@media (max-aspect-ratio:4/3){#stage{width:100vw;aspect-ratio:4/3;border-radius:0}}
+html,body{margin:0;height:100%;position:fixed;inset:0;width:100%;overscroll-behavior:none;-webkit-touch-callout:none;background:var(--ink);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;color:var(--ink);overflow:hidden;touch-action:manipulation}
+#wrap{position:relative;width:100%;height:100%;height:100dvh;display:flex;align-items:center;justify-content:center}
+#stage{position:relative;width:100vw;height:100vh;touch-action:none;box-shadow:0 0 0 4px var(--yellow),0 20px 60px #0008;border-radius:18px;overflow:hidden;background:var(--sky)}
+@media (max-width:700px),(max-height:500px){#stage{border-radius:0;box-shadow:none}}
+@media (max-height:480px){#intro{display:none}h1{font-size:28px}p{font-size:12px}.setup{padding:6px 10px;gap:4px}.btn{font-size:18px;box-shadow:0 4px 0 var(--ink)}}
 canvas{width:100%;height:100%;display:block}
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;text-align:center;padding:12px;background:#3b1f4acc;color:#fff;overflow:auto}
+.screen{position:absolute;inset:0;padding-bottom:env(safe-area-inset-bottom,0px);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;text-align:center;padding:12px;background:#3b1f4acc;color:#fff;overflow:auto}
 .screen>:first-child{margin-top:auto}.screen>:last-child{margin-bottom:auto}
 .setup{background:#ffffff22;border-radius:14px;padding:8px 12px;display:grid;gap:6px;max-width:580px;width:100%;font-size:clamp(12px,2vw,15px);text-align:left}
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between}
@@ -31,7 +32,7 @@ p{margin:0;font-size:clamp(13px,2.4vw,19px);max-width:34em}
 .pick{display:inline-flex;align-items:center;gap:8px;background:var(--paper);color:var(--ink);padding:8px 14px;border-radius:14px;border:3px dashed var(--pink);font-weight:600;cursor:pointer;font-size:clamp(13px,2.4vw,17px)}
 .pick input{max-width:200px;font-size:13px}
 #audioStatus{font-size:clamp(12px,2vw,15px);color:var(--mint);min-height:1.3em}
-#hud{position:absolute;top:8px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;font-weight:800;font-size:clamp(16px,3.4vw,30px);color:#fff;text-shadow:2px 2px 0 var(--ink)}
+#hud{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;font-weight:800;font-size:clamp(16px,3.4vw,30px);color:#fff;text-shadow:2px 2px 0 var(--ink)}
 #muteBtn{pointer-events:auto;font-size:clamp(16px,3vw,26px);background:var(--paper);border:3px solid var(--ink);border-radius:12px;padding:0 10px;cursor:pointer;box-shadow:0 3px 0 var(--ink)}
 .small{opacity:.85;font-size:clamp(11px,1.9vw,14px)}
 </style>
@@ -47,7 +48,7 @@ p{margin:0;font-size:clamp(13px,2.4vw,19px);max-width:34em}
 
   <div id="start" class="screen">
     <h1>Mat Bulao Run!</h1>
-    <p>Poof the blob runs on its own. Jump over spikes, boxes, pits and very suspicious rubber ducks. Every crash gets a very loud opinion.</p>
+    <p id="intro">Poof the blob runs on its own. Jump over spikes, boxes, pits and very suspicious rubber ducks. Every crash gets a very loud opinion.</p>
     <p><b>Jump:</b> Space, ↑, click or tap</p>
     <div class="setup">
       <div class="row"><b>🎭 Characters</b><label class="pick">➕ Add images<input type="file" id="charFile" accept="image/*" multiple></label></div>
@@ -73,7 +74,7 @@ p{margin:0;font-size:clamp(13px,2.4vw,19px);max-width:34em}
 <script>
 (()=>{
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
-const W=960,H=540,GROUND=430;
+let W=960,H=540,GROUND=430;
 const $=id=>document.getElementById(id);
 const startEl=$('start'),overEl=$('over'),hud=$('hud');
 
@@ -300,7 +301,7 @@ function drawBG(){
   const g=ctx.createLinearGradient(0,0,0,GROUND);g.addColorStop(0,'#7fd4ff');g.addColorStop(1,'#ffe3f1');
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   // sun
-  ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.arc(800,90,42,0,7);ctx.fill();outline();ctx.stroke();
+  ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.arc(W-160,90,42,0,7);ctx.fill();outline();ctx.stroke();
   clouds.forEach(c=>{
     ctx.fillStyle='#fff';ctx.save();ctx.translate(c.x,c.y);ctx.scale(c.s,c.s);
     ctx.beginPath();ctx.arc(0,0,26,0,7);ctx.arc(30,-10,32,0,7);ctx.arc(64,2,24,0,7);ctx.fill();ctx.restore();
@@ -414,6 +415,20 @@ function loop(ts){
   while(acc>=1000/60){update();acc-=1000/60}
   draw();requestAnimationFrame(loop);
 }
+// ---------- Responsive sizing (phones: portrait + landscape, desktop) ----------
+function fit(){
+  const vw=window.innerWidth,vh=window.innerHeight;
+  const asp=Math.max(.56,Math.min(1.78,vw/vh));
+  const sw=Math.min(vw,vh*asp),sh=sw/asp;
+  const st=$('stage');st.style.width=sw+'px';st.style.height=sh+'px';
+  W=asp<1?600:960;H=Math.round(W/asp);GROUND=H-(asp<1?150:110);
+  cv.width=W;cv.height=H;
+  if(P.onGround||state!=='play')P.y=GROUND;
+  clouds.forEach(c=>{c.x=Math.random()*W;c.y=30+Math.random()*Math.min(130,H*.3)});
+  obs.forEach(o=>{if(o.t==='bird')o.y=GROUND-85});
+}
+window.addEventListener('resize',fit);window.addEventListener('orientationchange',()=>setTimeout(fit,200));
+fit();
 reset();state='start';speed=5;
 requestAnimationFrame(ts=>{last=ts;loop(ts)});
 
